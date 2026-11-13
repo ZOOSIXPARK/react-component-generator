@@ -12,7 +12,7 @@
 ## Golden Rules
 
 - 보안 경계: 서버 환경변수의 API 키를 클라이언트 번들, `/api/config` 응답 또는 로그에 노출하지 않는다. 설정 응답에는 키 존재 여부만 전달한다. 근거: `server/index.ts:59`, `server/index.ts:147`.
-- API 연결: 브라우저의 상대 `/api` 요청을 유지한다. API 포트를 바꾸면 Bun 서버와 Vite 프록시 대상을 함께 수정한다. 근거: `src/hooks/useComponentGenerator.ts:23`, `server/index.ts:139`, `vite.config.ts:10`.
+- API 연결: 브라우저의 상대 `/api` 요청을 유지한다. API 포트를 바꾸면 Bun 서버와 Vite 프록시 대상을 함께 수정한다. 근거: `src/hooks/useComponentGenerator.ts:40`, `server/index.ts:139`, `vite.config.ts:10`.
 - 타입 검사 경계: `bun run build` 성공을 서버 타입 검사 성공으로 보고하지 않는다. 루트 TypeScript 참조는 `src`와 Vite 설정만 포함한다. 서버 수정은 해당 테스트와 필요한 별도 검증으로 확인한다. 근거: `tsconfig.json:3`, `tsconfig.app.json:27`, `tsconfig.node.json:25`.
 
 ## TDD Rule
