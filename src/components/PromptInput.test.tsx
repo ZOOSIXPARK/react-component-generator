@@ -26,4 +26,64 @@ describe('PromptInput', () => {
     render(<PromptInput onGenerate={vi.fn()} isLoading={true} />);
     expect(screen.getByRole('button', { name: '생성 중...' })).toBeDisabled();
   });
+
+  it('500자 입력은 제출할 수 있다', async () => {
+    const onGenerate = vi.fn();
+    const user = userEvent.setup();
+    render(<PromptInput onGenerate={onGenerate} isLoading={false} />);
+
+    await user.click(screen.getByRole('textbox'));
+    await user.paste('가'.repeat(500));
+    await user.click(screen.getByRole('button', { name: '컴포넌트 생성' }));
+
+    expect(onGenerate).toHaveBeenCalledWith('가'.repeat(500));
+  });
+
+  it('501자 입력은 오류를 표시하고 생성 버튼을 비활성화한다', async () => {
+    const onGenerate = vi.fn();
+    const user = userEvent.setup();
+    render(<PromptInput onGenerate={onGenerate} isLoading={false} />);
+
+    const input = screen.getByRole('textbox');
+    await user.click(input);
+    await user.paste('가'.repeat(501));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('프롬프트는 500자 이내로 입력해주세요.');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('button', { name: '컴포넌트 생성' })).toBeDisabled();
+    expect(onGenerate).not.toHaveBeenCalled();
+  });
+
+  it.each(['{Control>}{Enter}{/Control}', '{Meta>}{Enter}{/Meta}'])(
+    '초과 입력은 단축키 %s로도 제출할 수 없다',
+    async (shortcut) => {
+      const onGenerate = vi.fn();
+      const user = userEvent.setup();
+      render(<PromptInput onGenerate={onGenerate} isLoading={false} />);
+
+      await user.click(screen.getByRole('textbox'));
+      await user.paste('가'.repeat(501));
+      await user.keyboard(shortcut);
+
+      expect(onGenerate).not.toHaveBeenCalled();
+    },
+  );
+
+  it('초과 입력을 500자로 줄이면 오류가 사라지고 다시 제출할 수 있다', async () => {
+    const onGenerate = vi.fn();
+    const user = userEvent.setup();
+    render(<PromptInput onGenerate={onGenerate} isLoading={false} />);
+
+    const input = screen.getByRole('textbox');
+    await user.click(input);
+    await user.paste('가'.repeat(501));
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+
+    await user.keyboard('{Backspace}');
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+    await user.click(screen.getByRole('button', { name: '컴포넌트 생성' }));
+    expect(onGenerate).toHaveBeenCalledWith('가'.repeat(500));
+  });
 });
